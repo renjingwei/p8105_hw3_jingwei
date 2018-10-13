@@ -152,3 +152,184 @@ arrange(desc(n))
 
 
 ```
+
+There are total 134 different kinds of aisles. Among them, fresh vegetables has the most items.
+
+Make a plot that shows the number of items ordered in each aisle. Order aisles sensibly, and organize your plot so others can read it.
+
+```{r, aisle_plot}
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n = n()) %>% 
+  mutate(aisle = reorder(aisle, desc(n))) %>% 
+  ggplot(
+       aes(x = aisle, y = n)) +
+  geom_point() +
+  labs(
+    title = "Number of items ordered in each aisle",
+    x = "aisle",
+    y = "number of items",
+    caption = "Data from p8105.datasets package"
+  )  +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n = n()) %>%
+  mutate(aisle = reorder(aisle, desc(n))) %>% 
+  filter(min_rank(aisle) < 20) %>% 
+   ggplot(
+       aes(x = aisle, y = n)) +
+  geom_point() +
+  labs(
+    title = "Number of items ordered in each aisle Top 20",
+    x = "aisle",
+    y = "number of items",
+    caption = "Data from p8105.datasets package"
+  )  +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+top 20 number of items ordered in each aisle is ploted. Fresh vegetables has the highest number of orders, then its fresh fruits, packages vegetables fruits and yogurt.
+
+Make a table showing the most popular item in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”.
+
+```{r aisles_table}
+instacart %>% 
+  filter(aisle %in% c("baking ingredients",
+                      "dog food care", 
+                      "packaged vegetables fruits")) %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(n = n()) %>% 
+  mutate(n_ranking = min_rank(desc(n))) %>% 
+  filter(n_ranking < 2) %>% 
+  knitr::kable()
+```
+
+The most populay item in baking ingredients is light brown sugar with number of 499. The most populat item in dog food care is Snack Sticks Chicken & Rice Recipe Dog Treats with the number of 30. The most populay item in packaged vegetables fruits is Organic Baby Spinach with the number of 9784.
+
+Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+
+```{r, lady_apple_coffe_ice_cream}
+instacart %>%
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  mutate(order_day = ordered(order_dow, levels = c(0:6), labels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))) %>% 
+  group_by(product_name, order_day) %>% 
+  summarize(mean_hour = round(mean(order_hour_of_day))) %>% 
+  spread(key = order_day, value = mean_hour) %>% 
+  knitr::kable()
+
+```
+
+The table shows that customers generally buy coffee ice cream later than pink lady apples. People buy coffee ice cream mostly after 2 pm except Friday, while people by pink lady apples mostly around noon except wednesday.
+
+
+## problem 3
+The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and indicating the extent to which missing data is an issue.
+
+```{r, noaa}
+data("ny_noaa")
+
+ny_noaa %>%
+  group_by(id) %>%
+summarize(n = n())
+
+ny_noaa %>%
+  group_by(date) %>%
+summarize(n = n())
+
+
+ny_noaa %>%
+  group_by(id, date) %>%
+summarize(mean_depth = mean(snwd),
+          mean_prcp = mean (prcp))
+
+date_range = ny_noaa %>% 
+  arrange(date) 
+head(date_range)
+tail(date_range)
+```
+This dataset has `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. 
+Key variables: id shows Weather station ID and there are total 747 different stations. Date shows Date of observation and total 10957 days are recorded from 1981-01-01 to 2010-12-31prcp means Precipitation (tenths of mm).snow is Snowfall (mm).snwd is Snow depth (mm) tmax gives Maximum temperature (tenths of degrees C). tmin gives Minimum temperature (tenths of degrees C). There are `r sum(is.na(ny_noaa$prcp))` missing values for the precipitation colummn and `r sum(is.na(ny_noaa$tmax))` missing values for tmax and `r sum(is.na(ny_noaa$tmin))` missing values for tmin. `r sum(is.na(ny_noaa$snow))` missing values for Snowfall (mm) and `r sum(is.na(ny_noaa$snwd))` missing values for  Snow depth (mm). A large extent of the data are missing and this might be an issue in the analysis of this dataset.
+
+
+####do or answer the following (commenting on the results of each):
+
+Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
+
+```{r clean_ny_noaa}
+clean_ny_noaa = ny_noaa %>% 
+  janitor::clean_names() %>% 
+  separate(date, into = c("year", "month", "day"), sep = "-") %>% 
+  mutate(prcp = prcp / 10, tmax = as.numeric(tmax) / 10, tmin = as.numeric(tmin) / 10)
+
+clean_ny_noaa %>% 
+  group_by(snow) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+```
+
+observations for temperature, precipitation, and snowfall are given in reasonable units. Temperature converted from tenths of degrees C to degrees C and precipitation converted from tenths of mm to mm.Temperature tmin and tmax are converted into nuermic variables. 
+commonly observed values for snowfall is 0, because the chance of snowing is rare. 
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+
+```{r, two-panel-plot}
+ clean_ny_noaa %>% 
+  filter(month %in% c("01","07")) %>% 
+  mutate(month = recode(month, "01" = "January", "07" = "July")) %>% 
+  group_by(year, month, id) %>% 
+  summarize(average_max = mean(tmax, na.rm = TRUE)) %>% 
+  ggplot(aes(x = year, y = average_max, fill = month)) +
+  geom_boxplot() +
+scale_x_discrete(breaks = c(1981, 1987, 1993, 1999, 2005, 2010))+
+  labs(
+    title = "average max temperature in January and in July in each station across years",
+    x = "year",
+    y = "average max temperature (C)",
+    caption = "Data from p8105.datasets package"
+  )  + 
+  facet_grid(~ month)+
+viridis::scale_color_viridis(
+    name = "month", 
+    discrete = TRUE)
+
+```
+
+Based on the two-panel plot, it is very obvious that the mean value of total average max tempertuare between Jan and July is different. The max tempertuare for Jan is lower than the max temperature for July from 1981 to 2010. Greater variability happened in Jan. Most years have outliers. For example, in 1988 July, there is a super low max temperature. All outliers in July are below the min of the max tempature, while for Jan, relatively more outliers are higher than the average. 
+
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+
+```{r,tmax_tmin_and_snowfall}
+library(hexbin)
+temperature= clean_ny_noaa %>% 
+  ggplot(aes(x = tmax, y = tmin)) +
+  geom_hex() +
+  labs(
+    title = " tmax vs tmin for the full dataset",
+    x = "maximum temperature (C)",
+    y = "minimum temperature (C)",
+ caption = "Data from p8105.datasets package"
+  )
+
+snowfall=clean_ny_noaa %>% 
+  filter(snow > 0 & snow < 100) %>% 
+  ggplot(aes(x = year, y = snow, fill = year)) +
+  geom_boxplot() +
+  scale_x_discrete(breaks = c(1981, 1987, 1993, 1999, 2005, 2010)) +
+    labs(
+      x = "Year",
+      y = "Snowfall (mm)",
+      title = "alues greater than 0 and less than 100 separately by year",
+       caption = "Data from p8105.datasets package"
+    )
+temperature/snowfall
+
+```
+
+Generally, tmax and tmin are positively correlated. As tmax increases, tmin increases. The mostly observed tmax is between 0 to 25 C and the mostly observed tmin is between -15 to 18 C.
+Most years have fairly similar and constant snowfall,except 1998,2006 and 2010. Overall, the distribution of snowfall is stable, with the median of 25. 
+
+
+
