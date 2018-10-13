@@ -109,3 +109,26 @@ average_prop %>%
 The five-panel plot shows the distribution of these state-level averages over time. Very good has the highest proportion and poor has the lowest propotion. In each section, the proportion is fairly constant from 2002 to 2010 for almost all states, except that some states had relatively fluctuations in this period.
 
 ## problem 2
+The goal is to do some exploration of this dataset. To that end, write a short description of the dataset, noting the size and structure of the data, describing some key variables, and giving illstrative examples of observations.
+
+```{r, description}
+data("instacart")
+
+instacart %>%
+  group_by(order_id) %>%
+summarize(n = n())
+
+instacart %>%
+  group_by(product_id) %>%
+summarize(n = n())
+
+instacart %>% 
+  group_by(order_id) %>% 
+  summarize( n_product = n_distinct(product_id))
+
+instacart %>%
+  group_by(user_id) %>%
+summarize(n = n())
+
+
+```
