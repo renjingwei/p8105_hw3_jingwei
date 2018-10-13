@@ -2,7 +2,7 @@
 title: "Hw3_p8105"
 author: "Jingwei Ren"
 date: "10/13/2018"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
