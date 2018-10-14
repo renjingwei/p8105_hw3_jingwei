@@ -46,7 +46,7 @@ CT,FL and NC were observed at 7 locations.
 
 Make a “spaghetti plot” that shows the number of locations in each state from 2002 to 2010.
 
-```{r, spaghetti_plot}
+```{r, spaghetti_plot,fig.height=8}
 location_number = brfss %>% 
   group_by(year, locationabbr) %>% 
   summarize(n_location = n_distinct(locationdesc)) 
@@ -61,6 +61,7 @@ ggplot(location_number, aes(x = year, y = n_location, color = locationabbr)) +
   ) +
   viridis::scale_color_viridis(
     name = "state", 
+    guide = guide_legend(nrow = 6),
     discrete = TRUE
   ) 
 ```
@@ -85,7 +86,7 @@ The table shows the mean and standard deviation of the proportion of “Excellen
 
 For each year and state, compute the average proportion in each response category (taking the average across locations in a state). Make a five-panel plot that shows, for each response category separately, the distribution of these state-level averages over time.
 
-```{r, proportion}
+```{r, proportion,fig.height=8}
 average_prop = brfss %>% 
   group_by(year, locationabbr, response) %>% 
   summarize(average = mean(data_value, na.rm = TRUE)) 
@@ -101,7 +102,7 @@ average_prop %>%
   ) +
   facet_wrap(~ response) +
   viridis::scale_color_viridis(
-    name = "state", 
+    name = "state",  guide = guide_legend(nrow = 6),
     discrete = TRUE
   ) 
 ```
@@ -157,22 +158,22 @@ There are total 134 different kinds of aisles. Among them, fresh vegetables has 
 
 Make a plot that shows the number of items ordered in each aisle. Order aisles sensibly, and organize your plot so others can read it.
 
-```{r, aisle_plot}
+```{r, aisle_plot,fig.height=50}
 instacart %>% 
   group_by(aisle) %>% 
   summarize(n = n()) %>% 
   mutate(aisle = reorder(aisle, desc(n))) %>% 
   ggplot(
-       aes(x = aisle, y = n)) +
+       aes(x = n, y = aisle)) +
   geom_point() +
   labs(
     title = "Number of items ordered in each aisle",
-    x = "aisle",
-    y = "number of items",
+    x = "number of items",
+    y = "aisle",
     caption = "Data from p8105.datasets package"
-  )  +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
+  )  
+```
+```{r, aisle_plot2}
 instacart %>% 
   group_by(aisle) %>% 
   summarize(n = n()) %>%
@@ -189,6 +190,7 @@ instacart %>%
   )  +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
 
 top 20 number of items ordered in each aisle is ploted. Fresh vegetables has the highest number of orders, then its fresh fruits, packages vegetables fruits and yogurt.
 
@@ -289,10 +291,8 @@ scale_x_discrete(breaks = c(1981, 1987, 1993, 1999, 2005, 2010))+
     y = "average max temperature (C)",
     caption = "Data from p8105.datasets package"
   )  + 
-  facet_grid(~ month)+
-viridis::scale_color_viridis(
-    name = "month", 
-    discrete = TRUE)
+  facet_grid(~ month)
+
 
 ```
 
@@ -301,7 +301,7 @@ Based on the two-panel plot, it is very obvious that the mean value of total ave
 Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
 
 
-```{r,tmax_tmin_and_snowfall}
+```{r,tmax_tmin_and_snowfall,,fig.height=15}
 library(hexbin)
 temperature= clean_ny_noaa %>% 
   ggplot(aes(x = tmax, y = tmin)) +
